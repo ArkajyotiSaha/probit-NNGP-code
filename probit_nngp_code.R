@@ -100,7 +100,7 @@ for(mSub in c(15, 25, 50, 100)){
   t2 <- proc.time()
   
   t3 <- proc.time()
-  spRnd_Grid <- Binary_prediction(lkVecPN_list[[which.max(lkVecPN)]], rbind(geomUnknownRnd, geomUnknownGrid), beta = 0, n.neighbors = n.neighbors, sigma.sq = alphaTN[1], phi = alphaTN[2], tau.sq = 0,
+  spRnd_Grid <- Binary_prediction(lkVecPN_list[[which.max(lkVecPN)]], rbind(geomUnknownRnd, geomUnknownGrid), beta = 0, n.neighbors = n.neighbors, sigma.sq = alphaPN[1], phi = alphaPN[2], tau.sq = 0,
                                        verbose = FALSE, mc_iter = 100)
   
   predicted_out <- exp(colMeans(log(spRnd_Grid$result$predicted_e)))
