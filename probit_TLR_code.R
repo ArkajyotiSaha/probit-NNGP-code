@@ -90,6 +90,7 @@ alphaPool <- expand.grid(alphaVec1, alphaVec2)
 
 
 for(mSub in c(15, 25, 50)){
+  t1 <- proc.time()
   nSub <- mSub^2
   idx1D <- round(seq(1, m, length.out = mSub))
   idx2D <- c(kronecker(idx1D - 1, rep(m, mSub)) + idx1D)
@@ -97,7 +98,7 @@ for(mSub in c(15, 25, 50)){
   set.seed(123)
   lkVecTLR_TLR <- apply(alphaPool, 1, mle_func_TLR, geom = geom[idx2D, ], y = yTtl[idx2D])
   alphaTLR <- alphaPool[which.max(lkVecTLR_TLR), ]
-  
+  t2 <- proc.time()
   set.seed(123)
   ySub <- yTtl[idx2D]
   geomSub <- geom[idx2D, , drop = F]
