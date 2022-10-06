@@ -91,7 +91,8 @@ for(mSub in c(15, 25, 50, 100)){
   
   n.neighbors <- 15
   neigh <- BRISC_neighbor(geom[idx2D, ], n.neighbors = n.neighbors)
-  
+  t10 <- proc.time()
+  t11 <- proc.time()
   set.seed(123)
   lkVecPN_list <- apply(alphaPool, 1, mle_BRISC_func_PN, geom = geom[idx2D, ], y = yTtl[idx2D], neigh = neigh)
   lkVecPN <- sapply(1:length(lkVecPN_list), function(i) mean((colSums(log(lkVecPN_list[[i]]$result$e)))))
