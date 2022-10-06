@@ -90,7 +90,6 @@ alphaPool <- expand.grid(alphaVec1, alphaVec2)
 
 
 for(mSub in c(15, 25, 50)){
-  t1 <- proc.time()
   nSub <- mSub^2
   idx1D <- round(seq(1, m, length.out = mSub))
   idx2D <- c(kronecker(idx1D - 1, rep(m, mSub)) + idx1D)
@@ -115,7 +114,8 @@ for(mSub in c(15, 25, 50)){
   predGrid <- rep(NA, nrow(geomUnknownGrid))
   
   
-  # compute predictive probabilities at the 100 random locations via TN and save runtime for first prediction
+  # compute predictive probabilities at the 100 random locations via TLR and save runtime for first prediction
+  startTime <- Sys.time()
   for (i in 1:nrow(geomUnknownRnd))
   {
     geomTmp <- geomSub
@@ -145,8 +145,8 @@ for(mSub in c(15, 25, 50)){
     )[[1]]
   }
   
-  # compute and display the runtime and MSEs shown in Table 1 for TN
-#  timeCost <- as.numeric(difftime(endTime, startTime, units = "secs"))
+  # compute and display the runtime and MSEs shown in Table 1 for TLR
+  timeCost <- as.numeric(difftime(endTime, startTime, units = "secs"))
   MSERnd_TLR <- sum((prTtl[(n + 1):(n + 100)] - predRnd)^2) / 100
   MSEGrid_TLR <- sum((prTtl[(n + 101):(n + 200)] - predGrid)^2) / 100
   
