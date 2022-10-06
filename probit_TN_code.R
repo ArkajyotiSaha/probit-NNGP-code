@@ -88,12 +88,13 @@ alphaPool <- expand.grid(alphaVec1, alphaVec2)
 
 
 for(mSub in c(15, 25)){
-  t1 <- proc.time()
   nSub <- mSub^2
   idx1D <- round(seq(1, m, length.out = mSub))
   idx2D <- c(kronecker(idx1D - 1, rep(m, mSub)) + idx1D)
   
-
+  set.seed(123)
+  lkVecTLR_TN <- apply(alphaPool, 1, mle_func_TN, geom = geom[idx2D, ], y = yTtl[idx2D])
+  alphaTN <- alphaPool[which.max(lkVecTLR_TN), ]
 
   set.seed(123)
   ySub <- yTtl[idx2D]
