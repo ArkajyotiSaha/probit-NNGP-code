@@ -1,3 +1,8 @@
+library(TruncatedNormal)
+library(matrixStats)
+
+
+for(iter in 1:100){
 
 m <- 100
 n <- m * m
@@ -8,7 +13,7 @@ geom <- cbind(
 
 ## generate grid
 
-set.seed(123)
+set.seed(iter + 123)
 nUnknown <- 100
 geomTmp <- geom[(geom[, 1] < 1 - 0.9 / (m - 1)) &
                   (geom[, 2] < 1 - 0.9 / (m - 1)), ]
@@ -49,7 +54,7 @@ grf_gen <- function(geom, alpha) {
 }
 
 
-set.seed(123)
+set.seed(iter + 123)
 alpha1 <- 1
 alpha2 <- sqrt(30)
 alpha <- c(alpha1, alpha2)
@@ -60,7 +65,7 @@ prUnknownGrid <- prTtl[(n + nUnknown + 1):length(prTtl)]
 
 
 
-set.seed(123)
+set.seed(iter + 123)
 yTtl <- rbinom(n = n + 200, size = 1, prob = prTtl)
 y <- yTtl[1:n]
 
@@ -93,12 +98,12 @@ for(mSub in c(15, 25)){
   idx1D <- round(seq(1, m, length.out = mSub))
   idx2D <- c(kronecker(idx1D - 1, rep(m, mSub)) + idx1D)
   
-  set.seed(123)
+  set.seed(iter + 123)
   lkVecTLR_TN <- apply(alphaPool, 1, mle_func_TN, geom = geom[idx2D, ], y = yTtl[idx2D])
   alphaTN <- alphaPool[which.max(lkVecTLR_TN), ]
   t2 <- proc.time()
 
-  set.seed(123)
+  set.seed(iter + 123)
   ySub <- yTtl[idx2D]
   geomSub <- geom[idx2D, , drop = F]
   geomSub[, 1] <- geomSub[, 1] 
@@ -160,6 +165,17 @@ for(mSub in c(15, 25)){
   timeCost <- as.numeric(difftime(endTime, startTime, units = "secs"))
   MSERnd_TN <- sum((prTtl[(n + 1):(n + 100)] - predRnd)^2) / 100
   MSEGrid_TN <- sum((prTtl[(n + 101):(n + 200)] - predGrid)^2) / 100
-  
+  save(MSERnd_TN, MSEGrid_TN, file = paste0("../probit_nngp_TN/TN_n_",n,"_m_",mSub,"_sigma.sq_",alpha[1],"_phi_",alpha[2],"_iter_",iter,".RData"))
 }
-  
+}
+
+
+#collecting the result. 
+zip <- list.files(path = "../probit_nngp_TN", pattern = "TN_n_10000_m_15", full.names = T)#change m value as required
+tot_mat <- matrix(0, 100, 2)
+for(j in 1:length(zip)){
+    load(zip[j])
+    tot_mat[j,] <- c(MSEGrid_TN, MSERnd_TN)
+}
+
+colMedians(tot_mat)
