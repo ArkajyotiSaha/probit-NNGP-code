@@ -163,3 +163,4 @@ for(j in 1:length(zip)){
     tot_mat[j,] <- c(MSEGrid_TLR, MSERnd_TLR)
 }
 
+colMedians(tot_mat)
