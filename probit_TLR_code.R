@@ -90,7 +90,7 @@ alphaVec2 <- sqrt(seq(15, 45, length.out = 10))
 alphaPool <- expand.grid(alphaVec1, alphaVec2)
 
 
-for(mSub in c(15, 25, 50)){
+for(mSub in c(15, 25, 50, 100)){
   t1 <- proc.time()
   nSub <- mSub^2
   idx1D <- round(seq(1, m, length.out = mSub))
