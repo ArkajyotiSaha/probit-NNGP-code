@@ -1,6 +1,6 @@
 library(BRISC)
 library(matrixStats)
-
+for(iter in 1:100){
 m <- 100
 n <- m * m
 geom <- cbind(
@@ -10,10 +10,11 @@ geom <- cbind(
 
 ## generate grid
 
-set.seed(123)
+set.seed(iter + 123)
 nUnknown <- 100
 geomTmp <- geom[(geom[, 1] < 1 - 0.9 / (m - 1)) &
                   (geom[, 2] < 1 - 0.9 / (m - 1)), ]
+
 
 # random locations
 geomUnknownRnd <- geomTmp[sample(1:(n - 2 * m + 1), nUnknown, F), ] +
@@ -51,7 +52,7 @@ grf_gen <- function(geom, alpha) {
 }
 
 
-set.seed(123)
+set.seed(iter + 123)
 alpha1 <- 1
 alpha2 <- sqrt(30)
 alpha <- c(alpha1, alpha2)
@@ -59,10 +60,10 @@ prTtl <- pnorm(grf_gen(rbind(geom, geomUnknownRnd, geomUnknownGrid), alpha))#thi
 prUnknownRnd <- prTtl[(n + 1):(n + nUnknown)]
 prUnknownGrid <- prTtl[(n + nUnknown + 1):length(prTtl)]
 #z <- matrix(prTtl, m, m)
+head(prTtl)
 
 
-
-set.seed(123)
+set.seed(iter + 123)
 yTtl <- rbinom(n = n + 200, size = 1, prob = prTtl)
 y <- yTtl[1:n]
 
@@ -71,7 +72,7 @@ y <- yTtl[1:n]
 mle_BRISC_func_PN <- function(alpha, geom, y, neigh) {
   n <- nrow(geom)
   xi <- rep(0, n)
-  ret_total <- Binary_estimation(geom, y, beta = 0, n.neighbors = n.neighbors, sigma.sq = alpha[1], phi = alpha[2], tau.sq = 0, 
+  ret_total <- Binary_estimation(geom, y, beta = 0, n.neighbors = n.neighbors, sigma.sq = alpha[1], phi = alpha[2], tau.sq = 0,
                                  neighbor = neigh, verbose = FALSE, mc_iter = 100)
   return(ret_total)
 }
@@ -91,18 +92,25 @@ for(mSub in c(15, 25, 50, 100)){
   
   n.neighbors <- 15
   neigh <- BRISC_neighbor(geom[idx2D, ], n.neighbors = n.neighbors)
-  t10 <- proc.time()
-  t11 <- proc.time()
-  set.seed(123)
-  lkVecPN_list <- apply(alphaPool, 1, mle_BRISC_func_PN, geom = geom[idx2D, ], y = yTtl[idx2D], neigh = neigh)
-  lkVecPN <- sapply(1:length(lkVecPN_list), function(i) mean((colSums(log(lkVecPN_list[[i]]$result$e)))))
-  alphaPN <- alphaPool[which.max(lkVecPN), ]
+  
+  
+  llk_mx <- -Inf
+  alphaPN <- alphaPool[1, ]
+  set.seed(iter + 123)
+  for(i in 1:nrow(alphaPool)){
+    lkVecPN_temp <- mle_BRISC_func_PN(alphaPool[i,], geom = geom[idx2D, ], y = yTtl[idx2D], neigh = neigh)
+    if(llk_mx < mean(colSums(log(lkVecPN_temp$result$e)))){
+      llk_mx <- mean(colSums(log(lkVecPN_temp$result$e)))
+      lkVecPN <- lkVecPN_temp
+      alphaPN <- alphaPool[i,]
+    }
+  }
   
   t2 <- proc.time()
   
   t3 <- proc.time()
-  spRnd_Grid <- Binary_prediction(lkVecPN_list[[which.max(lkVecPN)]], rbind(geomUnknownRnd, geomUnknownGrid), beta = 0, n.neighbors = n.neighbors, sigma.sq = alphaPN[1], phi = alphaPN[2], tau.sq = 0,
-                                       verbose = FALSE, mc_iter = 100)
+  spRnd_Grid <- Binary_prediction(lkVecPN, rbind(geomUnknownRnd, geomUnknownGrid), beta = 0, n.neighbors = n.neighbors, sigma.sq = alphaPN[1], phi = alphaPN[2], tau.sq = 0,
+                                  verbose = FALSE, mc_iter = 100)
   
   predicted_out <- exp(colMeans(log(spRnd_Grid$result$predicted_e)))
   t4 <- proc.time()
@@ -110,8 +118,19 @@ for(mSub in c(15, 25, 50, 100)){
   
   MSERnd <- sum((prTtl[(n + 1):(n + 100)] - predicted_out[1:100])^2) / 100
   MSEGrid <- sum((prTtl[(n + 101):(n + 200)] - predicted_out[101:200])^2) / 100
-  
+  save(MSERnd, MSEGrid, file = paste0("../probit_nngp/n_",n,"_m_",mSub,"_sigma.sq_",alpha[1],"_phi_",alpha[2],"_iter_",iter,".RData"))
 }
+}
+
+#collecting the result. 
+zip <- list.files(path = "../probit_nngp", pattern = "n_10000_m_15", full.names = T)#change m value as required
+tot_mat <- matrix(0, 100, 2)
+for(j in 1:length(zip)){
+    load(zip[j])
+    tot_mat[j,] <- c(MSEGrid, MSERnd)
+}
+
+colMedians(tot_mat)
 
 
 
