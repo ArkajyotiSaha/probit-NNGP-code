@@ -194,7 +194,6 @@ t2 <- proc.time()
 mean((predicted_out - predRnd)^2)
 library(pROC)
 auc(yTtl[-idx2D], as.numeric(predicted_out>0.5))
-library(pROC)
 auc(yTtl[-idx2D], as.numeric(predRnd>0.5))
 pred_PN <- yTtl
 pred_TN <- yTtl
